@@ -12,6 +12,7 @@
   </header>
 
   <main>
+    <!-- START / MISSION FLOW -->
     <section id="screen-start">
       <button id="startRunBtn">START RUN</button>
     </section>
@@ -23,7 +24,7 @@
           <p id="mission-name">—</p>
         </div>
         <div class="controls">
-          <button id="openLoadout">View Loadout</button>
+          <button id="openLoadout">Open Loadout</button>
           <button id="openShop">Open Shop</button>
         </div>
       </div>
@@ -61,7 +62,36 @@
       </div>
     </section>
 
-    <aside id="shopPanel" style="display:none;">
+    <!-- LOADOUT PANEL -->
+    <aside id="loadoutPanel" class="panel" style="display:none;">
+      <header class="panel-header">
+        <h2>Loadout</h2>
+        <button id="closeLoadout">Close</button>
+      </header>
+
+      <div class="loadout-section">
+        <h3>Equipped</h3>
+        <div id="equippedList"></div>
+      </div>
+
+      <div class="loadout-section">
+        <h3>Owned Weapons</h3>
+        <div id="ownedWeaponsGrid" class="grid"></div>
+      </div>
+
+      <div class="loadout-section">
+        <h3>Owned Armor & Helmet</h3>
+        <div id="ownedArmorGrid" class="grid"></div>
+      </div>
+
+      <div class="loadout-section">
+        <h3>Ammo</h3>
+        <div id="ownedAmmo" class="grid"></div>
+      </div>
+    </aside>
+
+    <!-- SHOP PANEL -->
+    <aside id="shopPanel" class="panel" style="display:none;">
       <header class="panel-header">
         <h2 id="panelTitle">Shop</h2>
         <button id="closeShop">Close</button>
@@ -84,8 +114,22 @@
   </main>
 
   <footer>
-    <small>Roguelike rules: buy to use — if you die you lose weapons/armor/helmet/deployables. Ammo persists.</small>
+    <small>Roguelike rules: buy to use — if you die you lose weapons/armor/helmet/deployables/ammo. Ammo persists after missions until death.</small>
   </footer>
+
+  <!-- Mission selector overlay -->
+  <div id="pickerOverlay" style="display:none;">
+    <div id="pickerContainer">
+      <div id="pickerStrip"></div>
+      <div id="pickerPointer">▼</div>
+      <div id="pickerResult" style="display:none;">
+        <h2 id="pickedName"></h2>
+        <p id="pickedMsg"></p>
+        <button id="confirmPicked">CONTINUE</button>
+      </div>
+    </div>
+    <audio id="musicPlayer" preload="auto"></audio>
+  </div>
 
   <script src="script.js"></script>
 </body>
