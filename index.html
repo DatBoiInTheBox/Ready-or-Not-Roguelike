@@ -1,46 +1,94 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Ready or Not Roguelike</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <title>Ready or Not Roguelike</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <header>
+    <h1>Ready or Not — Roguelike Loadout & Shop</h1>
+    <div id="balance">Balance: $0</div>
+  </header>
 
-    <h1>Ready or Not Roguelike</h1>
+  <main>
+    <!-- START / MISSION FLOW -->
+    <section id="screen-start">
+      <button id="startRunBtn">START RUN</button>
+    </section>
 
-    <div id="screen-start">
-        <button onclick="beginRun()">START</button>
-    </div>
+    <section id="screen-mission" style="display:none;">
+      <div class="mission-header">
+        <div>
+          <h2>Mission Assigned</h2>
+          <p id="mission-name">—</p>
+        </div>
+        <div class="controls">
+          <button id="openLoadout">View Loadout</button>
+          <button id="openShop">Open Shop</button>
+        </div>
+      </div>
 
-    <div id="screen-mission" style="display:none;">
-        <h2>Mission Assigned:</h2>
-        <p id="mission-name"></p>
+      <div class="loadout-brief">
+        <h3>Your Loadout (quick view)</h3>
+        <div id="brief-loadout">Nothing owned yet.</div>
+      </div>
 
-        <h3>Your Loadout</h3>
-        <p>(Loadout system coming soon…)</p>
+      <div class="mission-actions">
+        <button id="startMissionBtn">START MISSION (Timer)</button>
+      </div>
+    </section>
 
-        <button onclick="startMissionTimer()">START MISSION</button>
-    </div>
+    <section id="screen-timer" style="display:none;">
+      <h2>Mission In Progress</h2>
+      <p id="timer">0:00</p>
+      <div class="mission-actions">
+        <button id="finishBtn">I FINISHED THE MISSION</button>
+      </div>
+    </section>
 
-    <div id="screen-timer" style="display:none;">
-        <h2>Mission In Progress</h2>
-        <p id="timer">0:00</p>
-        <button onclick="finishMission()">I FINISHED THE MISSION</button>
-    </div>
+    <section id="screen-score" style="display:none;">
+      <h2>Enter Your Score</h2>
+      <input id="scoreInput" placeholder="Example: 65" type="number" />
+      <button id="submitScoreBtn">SUBMIT SCORE</button>
+    </section>
 
-    <div id="screen-score" style="display:none;">
-        <h2>Enter Your Score</h2>
-        <input id="scoreInput" placeholder="Example: 65" type="number">
-        <button onclick="submitScore()">SUBMIT SCORE</button>
-    </div>
+    <section id="screen-results" style="display:none;">
+      <h2>Mission Results</h2>
+      <p id="money-earned">You earned $0</p>
+      <div class="results-actions">
+        <button id="continueBtn">CONTINUE (Next Mission)</button>
+        <button id="simulateDeathBtn" title="Simulate death to test roguelike loss">SIMULATE DEATH (Lose Gear)</button>
+      </div>
+    </section>
 
-    <div id="screen-results" style="display:none;">
-        <h2>Mission Results</h2>
-        <p id="money-earned"></p>
-        <button onclick="nextMission()">CONTINUE</button>
-    </div>
+    <!-- LOADOUT / SHOP UI -->
+    <aside id="shopPanel" style="display:none;">
+      <header class="panel-header">
+        <h2 id="panelTitle">Shop</h2>
+        <button id="closeShop">Close</button>
+      </header>
 
-    <script src="script.js"></script>
+      <nav class="tabs">
+        <button class="tab active" data-tab="Pistols">Pistols</button>
+        <button class="tab" data-tab="SMGs">SMGs</button>
+        <button class="tab" data-tab="ARs">ARs</button>
+        <button class="tab" data-tab="Shotguns">Shotguns</button>
+        <button class="tab" data-tab="Non-Lethal">Non-Lethal</button>
+        <button class="tab" data-tab="Armor">Armor</button>
+        <button class="tab" data-tab="Helmets">Helmets</button>
+        <button class="tab" data-tab="Tactical">Tactical</button>
+        <button class="tab" data-tab="Ammo">Ammo</button>
+      </nav>
 
+      <div id="itemsGrid" class="grid"></div>
+    </aside>
+  </main>
+
+  <footer>
+    <small>Roguelike rules: buy to use — if you die you lose weapons/armor/helmet/deployables. Ammo persists.</small>
+  </footer>
+
+  <script src="script.js"></script>
 </body>
 </html>
