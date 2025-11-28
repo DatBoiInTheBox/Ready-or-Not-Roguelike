@@ -1,7 +1,4 @@
-/* ====== Data & Config ====== */
 
-// Items derived from your file + prices you approved.
-// Each item: id, name, category (tab), type (weapon/ammo/armor/tactical), price, rarity, description, ammoType (optional)
 const ITEMS = [
   // Pistols (cheap)
   { id: "g19", name: "G19", category: "Pistols", type: "weapon", price: 0, rarity: "Common", description: "Standard 9mm sidearm. Owned at start.", ammoType: "9mm_jhp" },
