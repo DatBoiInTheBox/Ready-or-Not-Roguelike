@@ -1,8 +1,3 @@
-/* ====== Data & Config ====== */
-
-/*
- NOTE: if you replace/add audio files, put them in /audio/ and update MISSION_MUSIC mapping below.
-*/
 const MISSION_MUSIC = {
   "Thank You, Come Again (4U Gas Station)": "audio/thank_you_4u.mp3",
   "23 Megabytes A Second (San Uriel Condominiums)": "audio/23mbs_san_uriel.mp3",
@@ -11,7 +6,6 @@ const MISSION_MUSIC = {
   "Neon Tomb (Neon Nightclub)": "audio/neon_tomb.mp3",
   "A Lethal Obsession": "audio/alethalobsession.mp3",
   "Sinuous Trail": "audio/mindjolt.mp3",
-
 };
 
 // Items (IDs unique). Updated to avoid duplicate IDs.
@@ -120,6 +114,38 @@ const el = id => document.getElementById(id);
 const formatMoney = n => `$${n.toLocaleString()}`;
 function getItemById(id){ return ITEMS.find(i=>i.id===id); }
 function rarityClass(r){ return r.toLowerCase().replace(/\s+/g,""); }
+
+/* ====== Audio helpers: ensure a music player exists + resolve music file with fallback ====== */
+function ensureMusicPlayer(){
+  let audio = el("musicPlayer");
+  if(!audio){
+    audio = document.createElement("audio");
+    audio.id = "musicPlayer";
+    audio.preload = "auto";
+    audio.style.display = "none";
+    document.body.appendChild(audio);
+  }
+  return audio;
+}
+
+// fuzzy resolver: tries exact key, then normalized contains checks, else returns default
+function resolveMusicForMission(name){
+  const DEFAULT = "audio/mindjolt.mp3";
+  if(!name) return DEFAULT;
+  // try exact key match
+  if(MISSION_MUSIC[name]) return MISSION_MUSIC[name];
+  const norm = s => (s||"").toLowerCase().replace(/[^a-z0-9]+/g,"");
+  const q = norm(name);
+  for(const key of Object.keys(MISSION_MUSIC)){
+    if(key.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(key.toLowerCase())) return MISSION_MUSIC[key];
+    if(norm(key).includes(q) || q.includes(norm(key))) return MISSION_MUSIC[key];
+  }
+  // try matching by mission simple names mapping (common trimmed tokens)
+  for(const key of Object.keys(MISSION_MUSIC)){
+    if(key.toLowerCase().includes(q) || q.includes(key.toLowerCase())) return MISSION_MUSIC[key];
+  }
+  return DEFAULT;
+}
 
 /* ====== Renderers ====== */
 function refreshBalance(){ el("balance").innerText = `Balance: ${formatMoney(state.balance)}`; }
@@ -298,101 +324,86 @@ function openPickerThenChoose(){
   // Calculate target index randomly (prefer non-uniform randomness to look nicer)
   const total = strip.children.length;
   const chosenIndex = Math.floor(Math.random() * total);
-  const chosenElement = strip.children[chosenIndex];
 
   // We'll animate by shifting translateX in multiple phases (fast -> slow)
-  // Compute function to set translate
   function setOffset(offset){
     strip.style.transform = `translateX(${offset}px)`;
   }
 
-  // compute item center relative to strip's left
   function getCardCenter(elm){
     const rect = elm.getBoundingClientRect();
     const stripRect = strip.getBoundingClientRect();
     return rect.left - stripRect.left + rect.width/2;
   }
 
-  // initial offset so strip starts left
   setOffset(0);
 
-  // compute current center of chosen card and compute needed offset to put it under pointer
-  // But we want to run a decelerating animation. We'll track 'pos' and apply easing.
-  let animRunning = true;
-  // initial speed px per tick
-  let speed = 40 + Math.random()*40; // px per tick
-  // We'll compute desiredOffset so that chosen card center aligns to pointer
+  let speed = 40 + Math.random()*40;
   function computeDesiredOffsetForIndex(index){
     const card = strip.children[index];
     const cardCenter = getCardCenter(card);
-    // strip is positioned at translateX(off). The visible coordinate of cardCenter will be off + cardCenter.
-    // We want off + cardCenter = pointerX => off = pointerX - cardCenter
-    const currentTransform = strip.style.transform || "translateX(0px)";
-    // but we must compute fresh cardCenter as DOM may change; that's ok
     return pointerX - cardCenter;
   }
 
-  // Stepper: shift leftwards so it looks like cards scroll right-to-left (we'll negative offset)
   let offset = 0;
   let frames = 0;
-  const maxFrames = 200; // safety
+  const maxFrames = 200;
   const chosenFinalOffset = () => computeDesiredOffsetForIndex(chosenIndex);
 
-  // run loop
   const interval = setInterval(()=>{
     frames++;
-    // move offset by -speed
     offset -= speed;
     setOffset(offset);
 
-    // every few frames reduce speed (decelerate)
-    if(frames % 12 === 0){
-      speed *= 0.85; // decelerate
-    }
+    if(frames % 12 === 0) speed *= 0.85;
 
-    // if speed is low enough and offset close to desired offset -> finalize
     const desired = chosenFinalOffset();
     if(Math.abs(offset - desired) < 10 || frames > maxFrames){
       clearInterval(interval);
-      // snap to exact desired
       setOffset(desired);
-      // mark selected card visually
       Array.from(strip.children).forEach(c=>c.classList.remove("selected"));
       strip.children[chosenIndex].classList.add("selected");
-      // show result panel
       el("pickedName").innerText = strip.children[chosenIndex].innerText;
       el("pickedMsg").innerText = `${strip.children[chosenIndex].innerText} HAS BEEN SELECTED AS YOUR NEXT MISSION`;
       el("pickerResult").style.display = "block";
-      // play music mapped to mission (if exists)
-      const chosenName = strip.children[chosenIndex].innerText;
-      const audio = el("musicPlayer");
-      const musicFile = MISSION_MUSIC[chosenName];
-      if(musicFile){
-        audio.src = musicFile;
-        audio.currentTime = 0;
-        audio.play().catch(()=>{/*ignore*/});
-      }
 
-      // wire confirm to close picker and set mission
+      // play music mapped to mission (robust)
+      const chosenName = strip.children[chosenIndex].innerText;
+      const audio = ensureMusicPlayer();
+      const musicFile = resolveMusicForMission(chosenName) || "audio/mindjolt.mp3";
+
+      audio.onerror = () => {
+        if(audio.dataset.fallbackApplied) return;
+        audio.dataset.fallbackApplied = "1";
+        audio.src = "audio/mindjolt.mp3";
+        audio.load();
+        audio.play().catch(()=>{});
+      };
+
+      audio.dataset.fallbackApplied = "";
+      audio.src = musicFile;
+      audio.load();
+      // try to play when ready
+      const onCan = () => { audio.play().catch(()=>{}); audio.removeEventListener("canplaythrough", onCan); };
+      audio.addEventListener("canplaythrough", onCan);
+      audio.play().catch(()=>{});
+
       el("confirmPicked").onclick = ()=>{
-        // stop music when we move on to mission screen or keep? we stop when mission timer starts
         audio.pause();
         audio.currentTime = 0;
         overlay.style.display = "none";
-        // finalize chosen mission (use exact string)
         currentMission = strip.children[chosenIndex].innerText;
         el("mission-name").innerText = currentMission;
         el("screen-mission").style.display = "block";
       };
     }
 
-  }, 30); // ~33 fps
+  }, 30);
 }
 
 /* ====== Mission Flow ====== */
 function beginRun(){
   el("screen-start").style.display = "none";
-  // open picker
   openPickerThenChoose();
   renderBriefLoadout();
 }
@@ -400,13 +411,12 @@ function beginRun(){
 function assignMission(){ /* kept for backward compatibility */ }
 
 function startMissionTimer(){
-  // if player has no weapon equipped, warn but allow
   if(!state.equipped.primary && !state.equipped.secondary){
     if(!confirm("You have no equipped weapons. Start mission anyway?")) return;
   }
 
-  // stop any playing picker music
-  const audio = el("musicPlayer"); audio.pause(); audio.currentTime = 0;
+  const audio = ensureMusicPlayer();
+  audio.pause(); audio.currentTime = 0;
 
   el("screen-mission").style.display = "none";
   el("screen-timer").style.display = "block";
@@ -456,8 +466,7 @@ function simulateDeath(){
   state.ownedArmor = [];
   state.ownedHelmet = null;
   state.ownedTactical = [];
-  state.ammoCounts = {}; // ammo lost on death now
-  // clear equipped
+  state.ammoCounts = {};
   state.equipped = { primary: null, secondary: null, armor: null, helmet: null };
   saveState(); refreshBalance(); renderBriefLoadout(); alert("You died: all weapons, armor, helmet, deployables and ammo have been lost. Money persists.");
 }
@@ -470,17 +479,15 @@ function wireUI(){
   el("startMissionBtn").addEventListener("click", startMissionTimer);
   el("finishBtn").addEventListener("click", finishMission);
   el("submitScoreBtn").addEventListener("click", submitScore);
-  el("continueBtn").addEventListener("click", ()=> { // loop: open picker for next mission
+  el("continueBtn").addEventListener("click", ()=> {
     el("screen-results").style.display = "none";
     openPickerThenChoose();
   });
   el("simulateDeathBtn").addEventListener("click", simulateDeath);
 
-  // panels
   el("closeLoadout").addEventListener("click", ()=> el("loadoutPanel").style.display = "none");
   el("closeShop").addEventListener("click", closeShop);
 
-  // shop tabs
   document.querySelectorAll(".tab").forEach(t=>{
     t.addEventListener("click", ()=>{
       document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
@@ -489,8 +496,6 @@ function wireUI(){
       el("panelTitle").innerText = "Shop — " + t.dataset.tab;
     });
   });
-
-  // picker confirm already wired dynamically
 }
 
 /* ====== Shop open/close ====== */
@@ -510,5 +515,5 @@ document.addEventListener("DOMContentLoaded", ()=>{
   wireUI();
   refreshBalance();
   renderBriefLoadout();
-  // start with picker hidden; we assign mission when picker finishes
+  ensureMusicPlayer(); // create audio node if absent
 });
