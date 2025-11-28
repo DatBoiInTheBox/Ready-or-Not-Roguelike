@@ -480,13 +480,23 @@ function submitScore(){
 
 /* ====== Death (lose everything except balance) ====== */
 function simulateDeath(){
-  state.ownedWeapons = [];
-  state.ownedArmor = [];
-  state.ownedHelmet = null;
-  state.ownedTactical = [];
-  state.ammoCounts = {};
-  state.equipped = { primary: null, secondary: null, armor: null, helmet: null };
-  saveState(); refreshBalance(); renderBriefLoadout(); alert("You died: all weapons, armor, helmet, deployables and ammo have been lost. Money persists.");
+  const penalty = Math.floor(state.balance * 1);
+  state.balance = Math.max(0, state.balance - penalty);
+
+  // restore basic starting items and loadout
+  state.ownedWeapons = structuredClone(START_STATE.ownedWeapons);
+  state.ownedArmor = structuredClone(START_STATE.ownedArmor);
+  state.ownedHelmet = START_STATE.ownedHelmet;
+  state.ownedTactical = structuredClone(START_STATE.ownedTactical);
+  state.ammoCounts = structuredClone(START_STATE.ammoCounts);
+  state.equipped = structuredClone(START_STATE.equipped);
+
+  saveState();
+  refreshBalance();
+  renderBriefLoadout();
+  if(typeof renderLoadoutPanel === "function") renderLoadoutPanel();
+
+  alert(`You died: basic gear restored. You lost ${formatMoney(penalty)}.`);
 }
 
 /* ====== UI wiring ====== */
@@ -514,6 +524,24 @@ function wireUI(){
       el("panelTitle").innerText = "Shop — " + t.dataset.tab;
     });
   });
+
+  // add Reset Run button bottom-right
+  if(!el("resetRunBtn")){
+    const rb = document.createElement("button");
+    rb.id = "resetRunBtn";
+    rb.innerText = "Reset Run";
+    Object.assign(rb.style, {
+      position: "fixed",
+      right: "16px",
+      bottom: "16px",
+      zIndex: 9999,
+      padding: "10px 12px",
+      borderRadius: "6px",
+      cursor: "pointer"
+    });
+    rb.addEventListener("click", resetRun);
+    document.body.appendChild(rb);
+  }
 }
 
 /* ====== Shop open/close ====== */
@@ -535,3 +563,23 @@ document.addEventListener("DOMContentLoaded", ()=>{
   renderBriefLoadout();
   ensureMusicPlayer(); // create audio node if absent
 });
+
+function resetRun(){
+  if(!confirm("Reset run? This will restore starting gear and reset money to the starting balance.")) return;
+
+  if(timerInterval){ clearInterval(timerInterval); timerInterval = null; }
+  const audio = ensureMusicPlayer();
+  audio.pause();
+  audio.currentTime = 0;
+
+  state = structuredClone(START_STATE);
+  saveState();
+  refreshBalance();
+  renderBriefLoadout();
+  if(typeof renderLoadoutPanel === "function") renderLoadoutPanel();
+
+  const maybe = id => { const eln = document.getElementById(id); if(eln) eln.style.display = "none"; };
+  maybe("screen-mission"); maybe("screen-timer"); maybe("screen-score"); maybe("screen-results"); maybe("loadoutPanel"); maybe("shopPanel");
+  const ss = document.getElementById("screen-start"); if(ss) ss.style.display = "block";
+}
+
