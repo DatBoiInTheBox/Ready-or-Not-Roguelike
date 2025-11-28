@@ -8,7 +8,6 @@ const MISSION_MUSIC = {
   "Sinuous Trail": "audio/mindjolt.mp3",
 };
 
-// Items (IDs unique). Updated to avoid duplicate IDs.
 const ITEMS = [
   { id: "g19", name: "G19", category: "Pistols", type: "weapon", price: 0, rarity: "Common", description: "Standard 9mm sidearm. Owned at start.", ammoType: "9mm_jhp" },
   { id: "509", name: "509", category: "Pistols", type: "weapon", price: 300, rarity: "Common", description: "" },
@@ -45,7 +44,6 @@ const ITEMS = [
   { id: "stinger", name: "Stinger", category: "Tactical", type: "tactical", price: 175, rarity: "Uncommon", description: "" },
   { id: "taser", name: "Taser", category: "Tactical", type: "tactical", price: 600, rarity: "Rare", description: "" },
 
-  // Ammo (unique ids)
   { id: "9mm_jhp", name: "9mm JHP Mag", category: "Ammo", type: "ammo", price: 35, rarity: "Common", description: "Buy adds +1 mag." },
   { id: "9mm_fmj", name: "9mm FMJ Mag", category: "Ammo", type: "ammo", price: 30, rarity: "Common", description: "Buy adds +1 mag." },
   { id: "45_acp", name: ".45 ACP Mag", category: "Ammo", type: "ammo", price: 55, rarity: "Uncommon", description: "" },
@@ -55,7 +53,6 @@ const ITEMS = [
   { id: "beanbag_round", name: "Beanbag Round", category: "Ammo", type: "ammo", price: 150, rarity: "Rare", description: "" }
 ];
 
-/* ====== Game constants ====== */
 const BASE_PAY = 1000;
 const START_STATE = {
   balance: 0,
@@ -68,7 +65,6 @@ const START_STATE = {
   equipped: { primary: null, secondary: "g19", armor: null, helmet: null }
 };
 
-/* ====== Persistence ====== */
 const STORAGE_KEY = "ron_roguelike_v2";
 function loadState(){
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -115,7 +111,6 @@ const formatMoney = n => `$${n.toLocaleString()}`;
 function getItemById(id){ return ITEMS.find(i=>i.id===id); }
 function rarityClass(r){ return r.toLowerCase().replace(/\s+/g,""); }
 
-/* ====== Audio helpers: ensure a music player exists + resolve music file with fallback ====== */
 function ensureMusicPlayer(){
   let audio = el("musicPlayer");
   if(!audio){
@@ -128,11 +123,9 @@ function ensureMusicPlayer(){
   return audio;
 }
 
-// fuzzy resolver: tries exact key, then normalized contains checks, else returns default
 function resolveMusicForMission(name){
   const DEFAULT = "audio/mindjolt.mp3";
   if(!name) return DEFAULT;
-  // try exact key match
   if(MISSION_MUSIC[name]) return MISSION_MUSIC[name];
   const norm = s => (s||"").toLowerCase().replace(/[^a-z0-9]+/g,"");
   const q = norm(name);
@@ -140,7 +133,6 @@ function resolveMusicForMission(name){
     if(key.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(key.toLowerCase())) return MISSION_MUSIC[key];
     if(norm(key).includes(q) || q.includes(norm(key))) return MISSION_MUSIC[key];
   }
-  // try matching by mission simple names mapping (common trimmed tokens)
   for(const key of Object.keys(MISSION_MUSIC)){
     if(key.toLowerCase().includes(q) || q.includes(key.toLowerCase())) return MISSION_MUSIC[key];
   }
@@ -170,7 +162,6 @@ function renderBriefLoadout(){
   container.appendChild(ammoSumm);
 }
 
-/* Shop grid – same as before but with updated item ids */
 function renderItemsGrid(category){
   const grid = el("itemsGrid"); grid.innerHTML="";
   const items = ITEMS.filter(i => i.category === category);
@@ -218,6 +209,7 @@ function renderLoadoutPanel(){
   eq.innerHTML = `<div class="badge">Primary: ${primaryName}</div><div class="badge">Secondary: ${secondaryName}</div><div class="badge">Armor: ${armorName}</div><div class="badge">Helmet: ${helmetName}</div>`;
 
   // owned weapons grid
+ // owned weapons grid
   const gw = el("ownedWeaponsGrid"); gw.innerHTML="";
   state.ownedWeapons.forEach(wid=>{
     const it = getItemById(wid);
@@ -225,9 +217,19 @@ function renderLoadoutPanel(){
     card.innerHTML = `<div class="title"><span>${it?.name||wid}</span><span class="price">${it?.price?formatMoney(it.price):"Owned"}</span></div>
                       <div class="desc">${it?.description||""}</div>`;
     const row = document.createElement("div"); row.className="row";
-    const equipP = document.createElement("button"); equipP.innerText="Equip Primary"; equipP.addEventListener("click", ()=>{ state.equipped.primary = it.id; saveState(); renderLoadoutPanel(); renderBriefLoadout(); });
-    const equipS = document.createElement("button"); equipS.innerText="Equip Secondary"; equipS.addEventListener("click", ()=>{ state.equipped.secondary = it.id; saveState(); renderLoadoutPanel(); renderBriefLoadout(); });
-    row.appendChild(equipP); row.appendChild(equipS);
+
+    if(it && it.category === "Pistols"){
+      const equipS = document.createElement("button");
+      equipS.innerText = "Equip Secondary";
+      equipS.addEventListener("click", ()=>{ state.equipped.secondary = it.id; saveState(); renderLoadoutPanel(); renderBriefLoadout(); });
+      row.appendChild(equipS);
+    } else {
+      const equipP = document.createElement("button");
+      equipP.innerText = "Equip Primary";
+      equipP.addEventListener("click", ()=>{ state.equipped.primary = it.id; saveState(); renderLoadoutPanel(); renderBriefLoadout(); });
+      row.appendChild(equipP);
+    }
+
     card.appendChild(row);
     gw.appendChild(card);
   });
@@ -298,8 +300,7 @@ function buyItem(id){
   renderBriefLoadout();
   renderItemsGrid(item.category);
 }
-
-/* ====== Mission Picker (CSGO-style) ====== */
+/* ====== Mission Picker ====== */
 function openPickerThenChoose(){
   // show overlay
   const overlay = el("pickerOverlay"); overlay.style.display = "flex";
@@ -317,15 +318,13 @@ function openPickerThenChoose(){
     strip.appendChild(c);
   });
 
-  // arrange strip's translateX so center is at pointer; we'll animate via JS
+  
   const container = el("pickerContainer");
   const pointerX = container.clientWidth / 2;
 
-  // Calculate target index randomly (prefer non-uniform randomness to look nicer)
   const total = strip.children.length;
   const chosenIndex = Math.floor(Math.random() * total);
 
-  // We'll animate by shifting translateX in multiple phases (fast -> slow)
   function setOffset(offset){
     strip.style.transform = `translateX(${offset}px)`;
   }
@@ -367,7 +366,6 @@ function openPickerThenChoose(){
       el("pickedMsg").innerText = `${strip.children[chosenIndex].innerText} HAS BEEN SELECTED AS YOUR NEXT MISSION`;
       el("pickerResult").style.display = "block";
 
-      // play music mapped to mission (robust)
       const chosenName = strip.children[chosenIndex].innerText;
       const audio = ensureMusicPlayer();
       const musicFile = resolveMusicForMission(chosenName) || "audio/mindjolt.mp3";
@@ -383,10 +381,7 @@ function openPickerThenChoose(){
       audio.dataset.fallbackApplied = "";
       audio.src = musicFile;
       audio.load();
-      // try to play when ready
-      const onCan = () => { audio.play().catch(()=>{}); audio.removeEventListener("canplaythrough", onCan); };
-      audio.addEventListener("canplaythrough", onCan);
-      audio.play().catch(()=>{});
+      audio.play().catch(()=>{ /* may be blocked if unlock failed; ignore */ });
 
       el("confirmPicked").onclick = ()=>{
         audio.pause();
@@ -404,6 +399,9 @@ function openPickerThenChoose(){
 /* ====== Mission Flow ====== */
 function beginRun(){
   el("screen-start").style.display = "none";
+  const audioUnlock = ensureMusicPlayer();
+  audioUnlock.muted = true;
+  audioUnlock.play().then(()=>{ audioUnlock.pause(); audioUnlock.muted = false; }).catch(()=>{ audioUnlock.muted = false; });
   openPickerThenChoose();
   renderBriefLoadout();
 }
