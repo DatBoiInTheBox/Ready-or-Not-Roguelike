@@ -1,18 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>RoN Roguelike Economy</title>
+    <title>Ready or Not Roguelike</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
     <h1>Ready or Not Roguelike Generator</h1>
 
-    <button onclick="generateMission()">Generate Mission</button>
+    <div id="screen-start">
+        <button onclick="beginRun()">START</button>
+    </div>
 
-    <div id="mission"></div>
-    <div id="payout"></div>
+    <div id="screen-mission" style="display:none;">
+        <h2>Mission Assigned:</h2>
+        <p id="mission-name"></p>
+
+        <h3>Your Loadout</h3>
+        <p>(Loadout system coming soon…)</p>
+
+        <button onclick="startMissionTimer()">START MISSION</button>
+    </div>
+
+    <div id="screen-timer" style="display:none;">
+        <h2>Mission In Progress</h2>
+        <p id="timer">0:00</p>
+        <button onclick="finishMission()">I FINISHED THE MISSION</button>
+    </div>
+
+    <div id="screen-score" style="display:none;">
+        <h2>Enter Your Score</h2>
+        <input id="scoreInput" placeholder="Example: 65" type="number">
+        <button onclick="submitScore()">SUBMIT SCORE</button>
+    </div>
+
+    <div id="screen-results" style="display:none;">
+        <h2>Mission Results</h2>
+        <p id="money-earned"></p>
+        <button onclick="nextMission()">CONTINUE</button>
+    </div>
 
     <script src="script.js"></script>
+
 </body>
 </html>
-
