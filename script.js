@@ -1,11 +1,21 @@
 const MISSION_MUSIC = {
-  "Thank You, Come Again (4U Gas Station)": "audio/thank_you_4u.mp3",
-  "23 Megabytes A Second (San Uriel Condominiums)": "audio/23mbs_san_uriel.mp3",
-  "Twisted Nerve (213 Park Homes)": "audio/twisted_nerve.mp3",
-  "The Spider (Brixley Talent Time)": "audio/the_spider.mp3",
-  "Neon Tomb (Neon Nightclub)": "audio/neon_tomb.mp3",
-  "A Lethal Obsession": "audio/alethalobsession.mp3",
+  "Thank You, Come Again": "audio/thank_you_4u.mp3",
+  "23 Megabytes A Second": "audio/mindjolt.mp3",
+  "Twisted Nerve": "audio/mindjolt.mp3",
+  "The Spider": "audio/mindjolt.mp3",
+  "A Lethal Obsession": "audio/mindjolt.mp3",
   "Sinuous Trail": "audio/mindjolt.mp3",
+  "Ends of the Earth": "audio/mindjolt.mp3",
+  "Greased Palms": "audio/mindjolt.mp3",
+  "Valley of the Dolls": "audio/mindjolt.mp3",
+  "Elephant": "audio/mindjolt.mp3",
+  "Rust Belt": "audio/mindjolt.mp3",
+  "Sins of the Father": "audio/mindjolt.mp3",
+  "Neon Tomb": "audio/mindjolt.mp3",
+  "Buy Cheap, Buy Twice": "audio/mindjolt.mp3",
+  "Carriers of the Vine": "audio/mindjolt.mp3",
+  "Relapse": "audio/mindjolt.mp3",
+  "Hide and Seek": "audio/mindjolt.mp3"
 };
 
 const ITEMS = [
@@ -95,10 +105,20 @@ const MISSIONS = [
   "23 Megabytes A Second",
   "Twisted Nerve",
   "The Spider",
-  "Neon Tomb",
   "A Lethal Obession",
   "Ides of March",
-  "Sinuous Trail"
+  "Sinuous Trail",
+  "Ends of the Earth",
+  "Greased Palms",
+  "Valley of the Dolls",
+  "Elephant",
+  "Rust Belt",
+  "Sins of the Father",
+  "Neon Tomb",
+  "Buy Cheap, Buy Twice",
+  "Carriers of the Vine",
+  "Relapse",
+  "Hide and Seek"
 ];
 
 let currentMission = "";
